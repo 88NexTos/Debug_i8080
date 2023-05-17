@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Concurrent;
 using System.Text;
+//using System.Collections.Concurrent;
 //using System.Collections.Generic;
 //using System.Linq;
 //using System.Text;
@@ -114,8 +114,19 @@ namespace NexTos.An8bitCPU
 
         }
 
-        public void Step()
+        public virtual void Step()
 	    {
+            //
+        }
+
+        public virtual void State()
+        {
+            //
+        }
+
+        public virtual String Status()
+        {
+            return null;
             //
         }
 

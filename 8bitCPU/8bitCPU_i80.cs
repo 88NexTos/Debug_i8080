@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Security.Cryptography;
+//using System.Security.Cryptography;
 //using System.Collections.Generic;
 //using System.Linq;
 //using System.Text;
@@ -185,7 +185,7 @@ namespace NexTos.An8bitCPU
         }
 
 
-        public new void Step()
+        public override void Step()
         {
             // Read
             ushort addr = rg_PC;
@@ -217,13 +217,13 @@ namespace NexTos.An8bitCPU
             ticks += tc;
         }
 
-        public void State()
+        public override void State()
         {
             trc.AppendFormat(" A=0x{0,2:X2} B=0x{1,2:X2} C=0x{2,2:X2} D=0x{3,2:X2} E=0x{4,2:X2} H=0x{5,2:X2} L=0x{6,2:X2}  F=0x{7,2:X2}\t SP=0x{8,4:X4}\t PC=0x{9,4:X4}\t {10} cycles\n",
                 REGs[(byte)regs.A], REGs[(byte)regs.B], REGs[(byte)regs.C], REGs[(byte)regs.D], REGs[(byte)regs.E], REGs[(byte)regs.H], REGs[(byte)regs.L], rg_F, rg_SP, rg_PC, ticks);
         }
 
-        public String Status()
+        public override String Status()
         {
             return trc.ToString();
         }

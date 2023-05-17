@@ -39,6 +39,7 @@
   <ItemGroup>
     <Compile Include="8bitCPU.cs" />
     <Compile Include="8bitCPU_i80.cs" />
+    <Compile Include="Comp_rk86.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
