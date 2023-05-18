@@ -9,34 +9,86 @@ namespace NexTos.An8bitCPU
 {
     public class CPU_i80 : An8bitCPU
     {
-        enum regs : byte
+        protected enum regs : byte
         {
-            B, C, D, E, H, L, M, A
+            B = 0,
+            C = 1,
+            D = 2,
+            E = 3,
+            H = 4,
+            L = 5,
+            M = 6,
+            A = 7
         }
 
-        enum regp : byte
+        protected enum regp : byte
         {
-            BC, DE, HL, SP, PSW
+            BC = 0,
+            DE = 1,
+            HL = 2,
+            SP = 3,
+            PSW = 7
         }
 
-        enum cmds_alu : byte
+        protected enum cmds_alu : byte
         {
-            ADD, ADC, SUB, SBB, ANA, XRA, ORA, CMP
+            ADD = 0,
+            ADC = 1,
+            SUB = 2,
+            SBB = 3,
+            ANA = 4,
+            XRA = 5,
+            ORA = 6,
+            CMP = 7
         }
 
-        enum cmds_ali : byte
+        protected enum cmds_ali : byte
         {
-            ADI, ACI, SUI, SBI, ANI, XRI, ORI, CPI
+            ADI = 0,
+            ACI = 1,
+            SUI = 2,
+            SBI = 3,
+            ANI = 4,
+            XRI = 5,
+            ORI = 6,
+            CPI = 7
         }
 
-        enum cmds_rot : byte
+        protected enum cmds_rot : byte
         {
-            RLC, RRC, RAL, RAR, DAA, CMA, STC, CMC
+            RLC = 0,
+            RRC = 1,
+            RAL = 2,
+            RAR = 3,
+            DAA = 4,
+            CMA = 5,
+            STC = 6,
+            CMC = 7
         }
 
-        enum cmds_cond : byte
+        protected enum cmds_cond : byte
         {
-            NZ, Z, NC, C, PO, PE, P, M
+            NZ = 0,
+            Z = 1,
+            NC = 2,
+            C = 3,
+            PO = 4,
+            PE = 5,
+            P = 6,
+            M = 7
+        }
+
+        [Flags]
+        protected enum flags : byte
+        {
+            C = 1,
+            U1 = 2,
+            P = 4,
+            U3 = 8,
+            H = 16,
+            U5 = 32,
+            Z = 64,
+            S = 128
         }
 
         public CPU_i80()
@@ -52,6 +104,7 @@ namespace NexTos.An8bitCPU
             {
                 REGs[i] = 0;
             }
+            rg_F = 0;
         }
 
 
@@ -97,11 +150,11 @@ namespace NexTos.An8bitCPU
 */
         protected ushort rg_PSW
         {
-            get { return (ushort)((REGs[(byte)regs.A] << 8) + REGs[6]); }
+            get { return (ushort)((REGs[(byte)regs.A] << 8) + (byte)rg_F); }
             set
             {
                 REGs[(byte)regs.A] = (byte)((value >> 8) & 0xFF);
-                REGs[6] = (byte)(value & 0xFF);
+                rg_F = (flags)(value & 0xFF);
             }
         }
         protected ushort rg_BC
@@ -150,12 +203,26 @@ namespace NexTos.An8bitCPU
             }
         }
 
-        protected byte rg_F
+        protected flags rg_F
         {
-            get { return REGs[6]; }
-            set { REGs[6] = value; }
-        }
+            get { return (flags)REGs[6]; }
+            set { REGs[6] = (byte)((value & ~(flags.U3 | flags.U5)) | flags.U1); }
 
+        }
+        protected String Flags()
+        {
+            String result = "";
+            result += ((rg_F & flags.S) != 0) ? "S" : "s";
+            result += ((rg_F & flags.Z) != 0) ? "Z" : "z";
+            result += ((rg_F & flags.U5) != 0) ? "?" : "0";
+            result += ((rg_F & flags.H) != 0) ? "H" : "h";
+            result += ((rg_F & flags.U3) != 0) ? "?" : "0";
+            result += ((rg_F & flags.P) != 0) ? "P" : "p";
+            result += ((rg_F & flags.U1) != 0) ? "1" : "?";
+            result += ((rg_F & flags.C) != 0) ? "C" : "c";
+            return result;
+        }
+/*
         protected byte rg_M
         {
             get { return Mem_Read(rg_HL); }
@@ -171,14 +238,14 @@ namespace NexTos.An8bitCPU
                 Mem_Write(rg_HL, (byte)(value & 0xFF));
             }
         }
-
-        protected void push(ushort value)
+*/
+        protected void _push(ushort value)
         {
             Mem_WriteW((ushort)(rg_SP - 2), value);
             rg_SP -= 2;
         }
 
-        protected ushort pop()
+        protected ushort _pop()
         {
             rg_SP += 2;
             return Mem_ReadW((ushort)(rg_SP - 2));
@@ -219,8 +286,8 @@ namespace NexTos.An8bitCPU
 
         public override void State()
         {
-            trc.AppendFormat(" A=0x{0,2:X2} B=0x{1,2:X2} C=0x{2,2:X2} D=0x{3,2:X2} E=0x{4,2:X2} H=0x{5,2:X2} L=0x{6,2:X2}  F=0x{7,2:X2}\t SP=0x{8,4:X4}\t PC=0x{9,4:X4}\t {10} cycles\n",
-                REGs[(byte)regs.A], REGs[(byte)regs.B], REGs[(byte)regs.C], REGs[(byte)regs.D], REGs[(byte)regs.E], REGs[(byte)regs.H], REGs[(byte)regs.L], rg_F, rg_SP, rg_PC, ticks);
+            trc.AppendFormat(" A=0x{0,2:X2} B=0x{1,2:X2} C=0x{2,2:X2} D=0x{3,2:X2} E=0x{4,2:X2} H=0x{5,2:X2} L=0x{6,2:X2}  F=[{7,8}]\t SP=0x{8,4:X4}\t PC=0x{9,4:X4}\t {10} cycles\n",
+                REGs[(byte)regs.A], REGs[(byte)regs.B], REGs[(byte)regs.C], REGs[(byte)regs.D], REGs[(byte)regs.E], REGs[(byte)regs.H], REGs[(byte)regs.L], Flags(), rg_SP, rg_PC, ticks);
         }
 
         public override String Status()
@@ -600,10 +667,7 @@ namespace NexTos.An8bitCPU
                             i_cycles = 17;
                             break;
                     }
-
                 }
-
-                //
                 CMDs[cmd].mnemo = i_mnemo;
                 CMDs[cmd].par1 = i_par1;
                 CMDs[cmd].args = i_args;
@@ -857,42 +921,42 @@ namespace NexTos.An8bitCPU
         private int act_push()
         {
             ushort data = 0;
-            switch (current.par1)
+            switch ((regp)current.par1)
             {
-                case 0:
+                case regp.BC:
                     data = rg_BC;
                     break;
-                case 1:
+                case regp.DE:
                     data = rg_DE;
                     break;
-                case 2:
+                case regp.HL:
                     data = rg_HL;
                     break;
-                case 4:
+                case regp.PSW:
                     data = rg_PSW;
                     break;
             }
             System.Console.WriteLine("Push 0x{0,4:X4} from {1}", data, (regp)current.par1);
-            push(data);
+            _push(data);
             return current.cycles;
         }
 
         private int act_pop()
         {
-            ushort data = pop();
+            ushort data = _pop();
             System.Console.WriteLine("Pop  0x{0,4:X4}  to  {1}", data, (regp)current.par1);
-            switch (current.par1)
+            switch ((regp)current.par1)
             {
-                case 0:
+                case regp.BC:
                     rg_BC = data;
                     break;
-                case 1:
+                case regp.DE:
                     rg_DE = data;
                     break;
-                case 2:
+                case regp.HL:
                     rg_HL = data;
                     break;
-                case 4:
+                case regp.PSW:
                     rg_PSW = data;
                     break;
             }
@@ -970,7 +1034,7 @@ namespace NexTos.An8bitCPU
         private int act_call()
         {
             ushort jp_a = Mem_ReadW(rg_PC);
-            push((ushort)(rg_PC + 2));
+            _push((ushort)(rg_PC + 2));
             System.Console.WriteLine("Call of 0x{0, 4:X4}", jp_a);
             rg_PC = jp_a;
             return current.cycles;
@@ -978,7 +1042,7 @@ namespace NexTos.An8bitCPU
 
         private int act_ret()
         {
-            ushort jp_a = pop();
+            ushort jp_a = _pop();
             System.Console.WriteLine("Return to 0x{0, 4:X4}", jp_a);
             rg_PC = jp_a;
             return current.cycles;
